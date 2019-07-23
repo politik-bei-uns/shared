@@ -1,0 +1,66 @@
+version: '3'
+services:
+  politik-bei-uns-mongodb:
+    image: mongo:4.0
+    container_name: politik-bei-uns-mongodb
+    networks:
+      politik-bei-uns:
+        aliases:
+          - mongodb
+
+  politik-bei-uns-daemon-minio:
+    image: minio/minio
+    container_name: politik-bei-uns-minio
+    ports:
+      - 9000:9000
+    environment:
+      - MINIO_ACCESS_KEY=DEVELOPMENT
+      - MINIO_SECRET_KEY=DEVELOPMENT
+    volumes:
+      - politik-bei-uns-data-minio:/data
+    command: server /data
+    networks:
+      politik-bei-uns:
+        aliases:
+          - minio
+
+  politik-bei-uns-daemon-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    container_name: politik-bei-uns-daemon-elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.ml.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      politik-bei-uns:
+        aliases:
+          - elasticsearch
+
+
+  politik-bei-uns-redis:
+    image: redis
+    container_name: politik-bei-uns-redis
+    networks:
+      politik-bei-uns:
+        aliases:
+         - redis
+
+
+
+volumes:
+  politik-bei-uns-data-minio:
+
+
+networks:
+  politik-bei-uns:
+    driver: bridge
